@@ -53,7 +53,7 @@ Welcome to Zebrunner Server (Community Edition) v1.7 interactive installation wi
     echo "S3_BUCKET=$S3_BUCKET" >> $s3_filename
 
     echo "All set! Provided configuration saved to configuration/_common/s3.env (default config stored with .bak extension)"
-    echo "Warning: for proper functioning of email notifications, contents of configuration/minio/data has to be loaded to configured S3 bucket (and available under /templates/*.ftl keys)"
+    echo "WARNING: for proper functioning of email notifications, contents of configuration/minio/data has to be loaded to configured S3 bucket (and available under /templates/*.ftl keys)"
   }
 
   override_default_secrets() {
@@ -79,6 +79,7 @@ Welcome to Zebrunner Server (Community Edition) v1.7 interactive installation wi
       CRYPTO_SALT=$(random_string)
     fi
     echo "CRYPTO_SALT=$CRYPTO_SALT" >> $secrets_filename
+    echo
     echo "All set! Provided configuration saved to configuration/_common/secrets.env (default config stored with .bak extension)"
   }
 
@@ -86,19 +87,42 @@ Welcome to Zebrunner Server (Community Edition) v1.7 interactive installation wi
     cat /dev/urandom | env LC_CTYPE=C tr -dc a-zA-Z0-9 | head -c 50; echo
   }
 
+  override_default_host() {
+    hosts_filename=configuration/_common/hosts.env
+
+    # backup hosts
+    cp $hosts_filename $hosts_filename.bak
+
+    # clear original hosts.env
+    true >$hosts_filename
+
+    read -p 'Please provide your deployment http address value: ' ZEBRUNNER_HOST
+    if [[ -z "${ZEBRUNNER_HOST}" ]]; then
+      ZEBRUNNER_HOST=http://localhost
+    fi
+    echo "ZEBRUNNER_HOST=$ZEBRUNNER_HOST" >>$hosts_filename
+    echo
+    echo "Provided configuration saved to configuration/_common/hosts.env (default config stored with .bak extension)"
+  }
+
   read_secrets() {
     while true; do
-      read -p "01. Do you wish to override default secrets? (recommended) [y/n]? " secrets_yn
+      read -p "01. Do you wish to override default secrets? (recommended). If you've started zebrunner with customized secrets before, overriding by values you used is mandatory [y/n]" secrets_yn
       case $secrets_yn in
       [y]*)
         override_default_secrets
         break
         ;;
       [n]*)
+        echo
         echo "Skipping secrets configuration, default values will be used"
         break
         ;;
-      *) echo "Please answer y (yes) or n (no)." ;;
+      *)
+        echo
+        echo "Please answer y (yes) or n (no)."
+        echo
+        ;;
       esac
     done
   }
@@ -114,10 +138,55 @@ Welcome to Zebrunner Server (Community Edition) v1.7 interactive installation wi
         break
         ;;
       [n]*)
+        echo
         echo "Skipping S3 configuration, using minIO (https://min.io) backed by local filesystem"
         break
         ;;
-      *) echo "Please answer y (yes) or n (no)." ;;
+      *)
+        echo
+        echo "Please answer y (yes) or n (no)."
+        echo
+        ;;
+      esac
+    done
+  }
+
+  read_hosts() {
+    while true; do
+      read -p "03. Do you wish to override your deployment http address? (http://localhost by default) [y/n]" host_yn
+      case $host_yn in
+      [y]*)
+        override_default_host
+        break
+        ;;
+      [n]*)
+        echo
+        echo "Skipping host configuration, default value will be used"
+        break
+        ;;
+      *)
+        echo
+        echo "Please answer y (yes) or n (no)."
+        echo
+        ;;
+      esac
+    done
+  }
+
+  migration_tool_warning() {
+    while true; do
+      read -p "04. WARNING: Make sure that that username and password for postgres db in configuration/data-migration-scripts/001_iam.json matches DATABASE_USERNAME and DATABASE_PASSWORD in configuration/reporting-service/variables.env, otherwise successful data migration will be affected [ok]? " ok
+      case $ok in
+      [ok]*)
+        echo
+        echo "Provided values will be used."
+        break
+        ;;
+      *)
+        echo
+        echo "Please confirm that warning is taken into consideration (ok) ."
+        echo
+        ;;
       esac
     done
   }
@@ -127,6 +196,10 @@ Welcome to Zebrunner Server (Community Edition) v1.7 interactive installation wi
   read_secrets
   echo
   read_s3_configuration
+  echo
+  read_hosts
+  echo
+  migration_tool_warning
   echo
 
   echo "Proceeding with Zebrunner installation..."
