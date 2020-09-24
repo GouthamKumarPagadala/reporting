@@ -73,7 +73,7 @@
     cp configuration/_common/rabbitmq.env.original configuration/_common/rabbitmq.env
     sed -i "s#rabbitmq-user#${ZBR_RABBITMQ_USER}#g" configuration/_common/rabbitmq.env
     sed -i "s#rabbitmq-password#${ZBR_RABBITMQ_PASSWORD}#g" configuration/_common/rabbitmq.env
-    cp configuration/rabbitmq/definitions.json.original configuration/rabbitmq/definitions.json
+    cp configuration/rabbitmq/definitions/001-general-definition.json configuration/rabbitmq/definitions.json
     sed -i "s#rabbitmq-user#${ZBR_RABBITMQ_USER}#g" configuration/rabbitmq/definitions.json
     sed -i "s#rabbitmq-password#${ZBR_RABBITMQ_PASSWORD}#g" configuration/rabbitmq/definitions.json
 
@@ -173,7 +173,7 @@
     fi
 
     if [[ ! -f configuration/rabbitmq/definitions.json ]]; then
-      cp configuration/rabbitmq/definitions.json.original configuration/rabbitmq/definitions.json
+      cp configuration/rabbitmq/definitions/001-general-definition.json configuration/rabbitmq/definitions.json
     fi
 
     if [[ ! -f configuration/redis/redis.conf ]]; then
